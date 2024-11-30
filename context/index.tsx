@@ -25,5 +25,9 @@ export function AppWrapper({children}:{
 
 
 export function useAppContext(){
-    return useContext(AppContext);
+    const context = useContext(AppContext);
+  if (!context) {
+    throw new Error("useAppContext must be used within an AppWrapper");
+  }
+    return context;
 }

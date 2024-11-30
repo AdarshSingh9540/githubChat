@@ -8,14 +8,15 @@ import { motion } from "framer-motion";
 import { Github, Search, AlertCircle } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Toast from "@/components/ui/toast";
+import {Toast, ToastAction} from "@/components/ui/toast";
+import { useToast } from '@/hooks/use-toast';
 
 export default function InputBox() {
   const { setRepo } = useAppContext();
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!username.trim()) {
@@ -29,8 +30,15 @@ export default function InputBox() {
 
     setIsLoading(true);
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_GITHUB_URL}/${username}/repos`);
+      const response = await axios.get( `${process.env.NEXT_PUBLIC_GITHUB_URL}/${username}/repos?per_page=100`);
       setRepo(response.data);
+      toast({
+        title: "Success!",
+        description: "user found successfully.",
+        action: <ToastAction altText="Dismiss">OK</ToastAction>,
+        className:"text-green-700"
+      });
+      
       router.push('/user-repos');
     } catch (err) {
       console.error(err);
@@ -38,6 +46,7 @@ export default function InputBox() {
         title: "Error",
         description: "User not found or API error. Please try again.",
         variant: "destructive",
+        action:<ToastAction altText='Try Again'>Try Again</ToastAction>
       });
     } finally {
       setIsLoading(false);

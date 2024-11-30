@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion } from "framer-motion";
-import { Github, Search, AlertCircle } from 'lucide-react';
+import { Github, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {Toast, ToastAction} from "@/components/ui/toast";
+import { ToastAction} from "@/components/ui/toast";
 import { useToast } from '@/hooks/use-toast';
 
 export default function InputBox() {

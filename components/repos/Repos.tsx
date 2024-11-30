@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAppContext } from '@/context';
 import { Calendar, Code, ExternalLink, Star, GitFork } from 'lucide-react';
 import UserProfile from '../userProfile/UserProfile';

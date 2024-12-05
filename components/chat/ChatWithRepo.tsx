@@ -27,7 +27,7 @@ interface ChatWithRepoProps {
   repoName: string | null
 }
 
-export default function ChatWithRepo({ allFiles, owner, repoName }: ChatWithRepoProps) {
+export default function ChatWithRepo({ allFiles, repoName }: ChatWithRepoProps) {
   console.log(allFiles)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -35,23 +35,23 @@ export default function ChatWithRepo({ allFiles, owner, repoName }: ChatWithRepo
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   // Flatten file tree to get all file contents for context
-  const getFileContents = (files: RepoContent[]): string => {
-    const contents: string[] = []
+  // const getFileContents = (files: RepoContent[]): string => {
+  //   const contents: string[] = []
     
-    const extractContents = (fileList: RepoContent[]) => {
-      fileList.forEach(file => {
-        if (file.type === 'file' && file.content) {
-          contents.push(`File: ${file.path}\n${file.content}`)
-        }
-        if (file.children) {
-          extractContents(file.children)
-        }
-      })
-    }
+  //   const extractContents = (fileList: RepoContent[]) => {
+  //     fileList.forEach(file => {
+  //       if (file.type === 'file' && file.content) {
+  //         contents.push(`File: ${file.path}\n${file.content}`)
+  //       }
+  //       if (file.children) {
+  //         extractContents(file.children)
+  //       }
+  //     })
+  //   }
     
-    extractContents(files)
-    return contents.join('\n\n---\n\n')
-  }
+  //   extractContents(files)
+  //   return contents.join('\n\n---\n\n')
+  // }
 
   const handleSend = async () => {
     if (input.trim()) {

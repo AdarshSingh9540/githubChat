@@ -13,7 +13,7 @@ interface RepoContent {
   path: string;
   type: 'file' | 'dir';
   children?: RepoContent[];
-  [key: string]: any;
+  // [key: string]: any;
 }
 
 const RepositoryContent = () => {

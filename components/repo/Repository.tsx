@@ -4,12 +4,16 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { Folder, File, ArrowLeft } from 'lucide-react';
+import ChatWithRepo from '../chat/ChatWithRepo';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
 interface RepoContent {
   name: string;
   path: string;
   type: 'file' | 'dir';
-  [key: string]: string;
+  children?: RepoContent[];
+  [key: string]: any;
 }
 
 const RepositoryContent = () => {
@@ -17,13 +21,39 @@ const RepositoryContent = () => {
   const [currentPath, setCurrentPath] = useState('');
   const [fileContent, setFileContent] = useState('');
   const [error, setError] = useState('');
-  const [isClient, setIsClient] = useState(false); // To track if it's the client side
+  const [isClient, setIsClient] = useState(false);
+  const [allFiles, setAllFiles] = useState<RepoContent[]>([]);
 
   const searchParams = useSearchParams();
   const repoName = searchParams.get('name');
   const owner = searchParams.get('owner');
 
-  
+  const fetchAllFiles = useCallback(async (path = '') => {
+    if (owner && repoName) {
+      try {
+        const response = await axios.get(`https://api.github.com/repos/${owner}/${repoName}/contents/${path}`);
+        const contents = response.data;
+
+        const files = await Promise.all(
+          contents.map(async (item: RepoContent) => {
+            if (item.type === 'dir') {
+              const subFiles = await fetchAllFiles(item.path);
+              return { ...item, children: subFiles };
+            }
+            return item;
+          })
+        );
+
+        return files;
+      } catch (err) {
+        console.error(err);
+        setError('Failed to fetch repository contents');
+        return [];
+      }
+    }
+    return [];
+  }, [owner, repoName]);
+
   const fetchRepoContents = useCallback(async (path = '') => {
     if (owner && repoName) {
       try {
@@ -38,7 +68,6 @@ const RepositoryContent = () => {
     }
   }, [owner, repoName]);
 
- 
   const fetchFileContent = async (filePath: string) => {
     try {
       const response = await axios.get(`https://raw.githubusercontent.com/${owner}/${repoName}/main/${filePath}`);
@@ -50,16 +79,15 @@ const RepositoryContent = () => {
   };
 
   useEffect(() => {
-    setIsClient(true); 
+    setIsClient(true);
   }, []);
-
 
   useEffect(() => {
     if (owner && repoName) {
-      fetchRepoContents(); 
+      fetchRepoContents();
+      fetchAllFiles().then(files => setAllFiles(files));
     }
-  }, [owner, repoName, fetchRepoContents]);
-
+  }, [owner, repoName, fetchRepoContents, fetchAllFiles]);
 
   const handleFolderClick = (path: string) => {
     fetchRepoContents(path);
@@ -68,6 +96,7 @@ const RepositoryContent = () => {
   const handleFileClick = (filePath: string) => {
     fetchFileContent(filePath);
   };
+
   const handleBackClick = () => {
     const parentPath = currentPath.split('/').slice(0, -1).join('/');
     fetchRepoContents(parentPath);
@@ -86,42 +115,52 @@ const RepositoryContent = () => {
   }
 
   return (
-    <div className="p-4 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-3xl font-bold mb-4 text-center py-6">{repoName}</h1>
-      <p className="text-gray-400 mb-6">Contents of the repository:</p>
+    <div className='p-4 bg-gray-900 min-h-screen text-white md:flex'>
+      <div className="md:w-1/2 pr-4">
+        <h1 className="text-3xl font-bold mb-4 text-center py-6">{repoName}</h1>
+        <p className="text-gray-400 mb-6">Contents of the repository:</p>
 
-      {currentPath && (
-        <button
-          className="mb-4 px-2 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white flex items-center justify-center"
-          onClick={handleBackClick}
-        >
-          <ArrowLeft className='mr-1' /> Back
-        </button>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {repoContents.map((item, index) => (
-          <div
-            key={index}
-            className="p-4 bg-gray-800 rounded shadow-md flex items-center gap-4 cursor-pointer hover:bg-gray-700"
-            onClick={() => item.type === 'dir' ? handleFolderClick(item.path) : handleFileClick(item.path)}
+        {currentPath && (
+          <Button
+            className="mb-4 px-2 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white flex items-center justify-center"
+            onClick={handleBackClick}
           >
-            {item.type === 'dir' ? (
-              <Folder className="h-6 w-6 text-yellow-500" />
-            ) : (
-              <File className="h-6 w-6 text-blue-500" />
-            )}
-            <span className="truncate">{item.name}</span>
+            <ArrowLeft className='mr-1' /> Back
+          </Button>
+        )}
+
+        <ScrollArea className="h-[calc(100vh-250px)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {repoContents.map((item, index) => (
+              <div
+                key={index}
+                className="p-4 bg-gray-800 rounded shadow-md flex items-center gap-4 cursor-pointer hover:bg-gray-700"
+                onClick={() => item.type === 'dir' ? handleFolderClick(item.path) : handleFileClick(item.path)}
+              >
+                {item.type === 'dir' ? (
+                  <Folder className="h-6 w-6 text-yellow-500" />
+                ) : (
+                  <File className="h-6 w-6 text-blue-500" />
+                )}
+                <span className="truncate">{item.name}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </ScrollArea>
+
+        {fileContent && (
+          <div className="mt-8 p-4 bg-gray-800 rounded">
+            <h2 className="text-xl font-semibold text-blue-500 mb-4">File Content</h2>
+            <ScrollArea className="h-[300px]">
+              <pre className="text-sm text-gray-200 whitespace-pre-wrap">{fileContent}</pre>
+            </ScrollArea>
+          </div>
+        )}
       </div>
 
-      {fileContent && (
-        <div className="mt-8 p-4 bg-gray-800 rounded">
-          <h2 className="text-xl font-semibold text-blue-500 mb-4">File Content</h2>
-          <pre className="text-sm text-gray-200 whitespace-pre-wrap">{fileContent}</pre>
-        </div>
-      )}
+      <div className="md:w-1/2 pl-4">
+        <ChatWithRepo allFiles={allFiles} owner={owner} repoName={repoName} />
+      </div>
     </div>
   );
 }
@@ -133,3 +172,4 @@ export default function Repository() {
     </Suspense>
   );
 }
+

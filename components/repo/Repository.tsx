@@ -13,7 +13,6 @@ interface RepoContent {
   path: string;
   type: 'file' | 'dir';
   children?: RepoContent[];
-  // [key: string]: any;
 }
 
 const RepositoryContent = () => {
@@ -23,6 +22,7 @@ const RepositoryContent = () => {
   const [error, setError] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [allFiles, setAllFiles] = useState<RepoContent[]>([]);
+  const [viewingFile, setViewingFile] = useState(false); // New state to track file view
 
   const searchParams = useSearchParams();
   const repoName = searchParams.get('name');
@@ -61,6 +61,7 @@ const RepositoryContent = () => {
         setRepoContents(response.data);
         setCurrentPath(path);
         setFileContent('');
+        setViewingFile(false); // Return to folder view
       } catch (err) {
         console.error(err);
         setError('Failed to fetch repository contents');
@@ -72,6 +73,7 @@ const RepositoryContent = () => {
     try {
       const response = await axios.get(`https://raw.githubusercontent.com/${owner}/${repoName}/main/${filePath}`);
       setFileContent(response.data);
+      setViewingFile(true); // Switch to file view
     } catch (err) {
       console.error(err);
       setError('Failed to fetch file content');
@@ -102,6 +104,11 @@ const RepositoryContent = () => {
     fetchRepoContents(parentPath);
   };
 
+  const handleBackToRepoClick = () => {
+    setViewingFile(false); // Return to folder view
+    setFileContent('');
+  };
+
   if (!isClient) {
     return <div>Loading...</div>;
   }
@@ -110,60 +117,67 @@ const RepositoryContent = () => {
     return <div className="text-center text-red-500">{error}</div>;
   }
 
-  if (!repoContents.length) {
-    return <div className="text-center text-white">Loading...</div>;
-  }
-
   return (
-    <div className='p-4 bg-gray-900 min-h-screen text-white md:flex'>
+    <div className="p-4 bg-gray-900 min-h-screen text-white md:flex">
       <div className="md:w-1/2 pr-4">
-        <h1 className="text-3xl font-bold mb-4 text-center py-6">{repoName}</h1>
-        <p className="text-gray-400 mb-6">Contents of the repository:</p>
+        <h1 className="text-xl font-bold mb-4 text-center py-2">{repoName}</h1>
+        <p className="text-gray-400 mb-3">
+          {viewingFile ? `Viewing file content` : `Contents of the repository:`}
+        </p>
 
-        {currentPath && (
+        {currentPath && !viewingFile && (
           <Button
             className="mb-4 px-2 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white flex items-center justify-center"
             onClick={handleBackClick}
           >
-            <ArrowLeft className='mr-1' /> Back
+            <ArrowLeft className="mr-1" /> Back
           </Button>
         )}
 
-        <ScrollArea className="h-[calc(100vh-250px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {repoContents.map((item, index) => (
-              <div
-                key={index}
-                className="p-4 bg-gray-800 rounded shadow-md flex items-center gap-4 cursor-pointer hover:bg-gray-700"
-                onClick={() => item.type === 'dir' ? handleFolderClick(item.path) : handleFileClick(item.path)}
-              >
-                {item.type === 'dir' ? (
-                  <Folder className="h-6 w-6 text-yellow-500" />
-                ) : (
-                  <File className="h-6 w-6 text-blue-500" />
-                )}
-                <span className="truncate">{item.name}</span>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        {fileContent && (
-          <div className="mt-8 p-4 bg-gray-800 rounded">
-            <h2 className="text-xl font-semibold text-blue-500 mb-4">File Content</h2>
-            <ScrollArea className="h-[300px]">
-              <pre className="text-sm text-gray-200 whitespace-pre-wrap">{fileContent}</pre>
-            </ScrollArea>
-          </div>
+        {viewingFile && (
+          <Button
+            className="mb-4 px-2 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white flex items-center justify-center"
+            onClick={handleBackToRepoClick}
+          >
+            <ArrowLeft className="mr-1" /> Back to Repository
+          </Button>
         )}
+
+        <div className="h-[calc(100vh-250px)]">
+          {!viewingFile ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {repoContents.map((item, index) => (
+                <div
+                  key={index}
+                  className="p-4 bg-gray-800 rounded shadow-md flex items-center gap-4 cursor-pointer hover:bg-gray-700"
+                  onClick={() => item.type === 'dir' ? handleFolderClick(item.path) : handleFileClick(item.path)}
+                >
+                  {item.type === 'dir' ? (
+                    <Folder className="h-6 w-6 text-yellow-500" />
+                  ) : (
+                    <File className="h-6 w-6 text-blue-500" />
+                  )}
+                  <span className="truncate">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 bg-gray-800 rounded">
+              <h2 className="text-xl font-semibold text-blue-500 mb-4">File Content</h2>
+              <ScrollArea className="h-[calc(100vh-300px)]">
+                <pre className="text-sm text-gray-200 whitespace-pre-wrap">{fileContent}</pre>
+              </ScrollArea>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="md:w-1/2 pl-4">
-        <ChatWithRepo allFiles={allFiles} owner={owner} repoName={repoName} />
+      <div className="md:w-1/2 lg:pl-4">
+        <ChatWithRepo allFiles={allFiles} owner={owner} repoName={repoName} fileContent={fileContent} />
       </div>
     </div>
   );
-}
+};
 
 export default function Repository() {
   return (
@@ -172,4 +186,3 @@ export default function Repository() {
     </Suspense>
   );
 }
-

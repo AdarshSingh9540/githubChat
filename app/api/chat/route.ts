@@ -7,9 +7,9 @@ export async function POST(req: NextRequest) {
         const data = await req.json();
         
         // Validate input
-        if (!data.body) {
+        if (!data.body || !data.fileContent) {
             return NextResponse.json({ 
-                error: 'No input provided' 
+                error: 'No input or file content provided' 
             }, { status: 400 });
         }
 
@@ -17,8 +17,10 @@ export async function POST(req: NextRequest) {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY || '');
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+        // Combine user input with file content for context
+        const prompt = `User input: ${data.body}\nFile content context: ${data.fileContent}`;
+
         // Generate content
-        const prompt = data.body;
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const output = await response.text();

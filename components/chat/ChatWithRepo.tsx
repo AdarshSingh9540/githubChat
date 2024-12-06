@@ -25,89 +25,68 @@ interface ChatWithRepoProps {
   allFiles: RepoContent[]
   owner: string | null
   repoName: string | null
+  fileContent: string 
 }
 
-export default function ChatWithRepo({ allFiles, repoName }: ChatWithRepoProps) {
-  console.log(allFiles)
+export default function ChatWithRepo({ allFiles, repoName, fileContent }: ChatWithRepoProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  
-  // Flatten file tree to get all file contents for context
-  // const getFileContents = (files: RepoContent[]): string => {
-  //   const contents: string[] = []
-    
-  //   const extractContents = (fileList: RepoContent[]) => {
-  //     fileList.forEach(file => {
-  //       if (file.type === 'file' && file.content) {
-  //         contents.push(`File: ${file.path}\n${file.content}`)
-  //       }
-  //       if (file.children) {
-  //         extractContents(file.children)
-  //       }
-  //     })
-  //   }
-    
-  //   extractContents(files)
-  //   return contents.join('\n\n---\n\n')
-  // }
 
   const handleSend = async () => {
     if (input.trim()) {
-      // Add user message
       const userMessage: Message = {
         id: Date.now(),
         text: input.trim(),
         sender: 'user'
-      }
-      setMessages(prev => [...prev, userMessage])
-      
-      setIsLoading(true)
-      
+      };
+      setMessages(prev => [...prev, userMessage]);
+  
+      setIsLoading(true);
+  
       try {
-        // Simplified for Gemini initial implementation
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            body: input.trim() // Match the backend expectation
-          })
-        })
-        
-        // Add error handling for response
+            body: input.trim(),
+            fileContent: fileContent,  
+          }),
+        });
+  
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        
-        const data = await response.json()
-        
-        // Add bot response
+  
+        const data = await response.json();
         const botMessage: Message = {
           id: Date.now(),
           text: data.output || "I couldn't generate a response.",
-          sender: 'bot'
-        }
-        
-        setMessages(prev => [...prev, botMessage])
+          sender: 'bot',
+        };
+  
+        setMessages(prev => [...prev, botMessage]);
       } catch (error) {
-        console.error('Chat error:', error)
-        
+        console.error('Chat error:', error);
+  
         const errorMessage: Message = {
           id: Date.now(),
           text: "Sorry, there was an error processing your request.",
-          sender: 'bot'
-        }
-        
-        setMessages(prev => [...prev, errorMessage])
+          sender: 'bot',
+        };
+  
+        setMessages(prev => [...prev, errorMessage]);
       } finally {
-        setIsLoading(false)
-        setInput('')
+        setIsLoading(false);
+        setInput('');
       }
     }
-  }
+  };
+  
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
       handleSend()
@@ -159,9 +138,7 @@ export default function ChatWithRepo({ allFiles, repoName }: ChatWithRepoProps) 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`mb-4 ${
-              message.sender === 'user' ? 'text-right' : 'text-left'
-            }`}
+            className={`mb-4 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}
           >
             <div
               className={`inline-block p-2 rounded-lg max-w-[80%] ${

@@ -64,7 +64,7 @@ export default function ChatWithRepo({ allFiles, repoName, fileContent }: ChatWi
         const data = await response.json();
         const botMessage: Message = {
           id: Date.now(),
-          text: data.output || "I couldn't generate a response.",
+          text: formatBotResponse(data.output) || "I couldn't generate a response.",
           sender: 'bot',
         };
   
@@ -86,6 +86,18 @@ export default function ChatWithRepo({ allFiles, repoName, fileContent }: ChatWi
     }
   };
   
+  const formatBotResponse = (response: string): string => {
+    const lines = response.split('\n');
+    return lines.map(line => {
+      if (line.startsWith('*')) {
+        return `<li>${line.slice(1).trim()}</li>`;
+      }
+      if (line.startsWith('**')) {
+        return `<b>${line.slice(2).trim()}</b>`;
+      }
+      return `<p>${line.trim()}</p>`;
+    }).join('');
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isLoading) {
@@ -146,9 +158,8 @@ export default function ChatWithRepo({ allFiles, repoName, fileContent }: ChatWi
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-600 text-white'
               }`}
-            >
-              {message.text}
-            </div>
+              dangerouslySetInnerHTML={{ __html: message.text }}
+            />
           </div>
         ))}
         <div ref={messagesEndRef} />

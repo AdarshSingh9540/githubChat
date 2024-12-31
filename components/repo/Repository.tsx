@@ -120,8 +120,8 @@ const RepositoryContent = () => {
   return (
     <div className="p-4 bg-gray-900 min-h-screen text-white md:flex">
       <div className="md:w-1/2 pr-4">
-        <h1 className="text-xl font-bold mb-4 text-center py-2">{repoName}</h1>
-        <p className="text-gray-400 mb-3">
+        <h1 className="text-xl font-bold  text-center py-2">{repoName} </h1>
+        <p className="text-lg font-semibold mb-4 text-center text-gray-400">
           {viewingFile ? `Viewing file content` : `Contents of the repository:`}
         </p>
 

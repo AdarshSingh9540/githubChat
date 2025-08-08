@@ -77,7 +77,7 @@ export default function ChatWithRepo({
 
       try {
         const response = await fetch("https://chat-git.vercel.app/api/chat", {
-        // const response = await fetch("http://localhost:3000/api/chat", {
+          // const response = await fetch("http://localhost:3000/api/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -236,8 +236,8 @@ export default function ChatWithRepo({
                   <div
                     className={`inline-block p-3 rounded-lg ${
                       message.sender === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                        ? "bg-blue-900 text-white"
+                        : "bg-slate-900 text-slate-100"
                     }`}
                     dangerouslySetInnerHTML={{ __html: message.text }}
                   />
@@ -271,7 +271,7 @@ export default function ChatWithRepo({
           <div ref={messagesEndRef} />
         </ScrollArea>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="p-4 border-t border-gray-600">
           <div className="flex space-x-2">
             <Input
               type="text"

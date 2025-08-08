@@ -185,7 +185,7 @@ const RepositoryContent = () => {
   return (
     <div className="min-h-s\ bg-gray-900  text-white ">
       {/* Header Section */}
-      <div className=" dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+      <div className=" dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-700 dark:border-slate-700 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -268,7 +268,7 @@ const RepositoryContent = () => {
                     {repoContents.map((item, index) => (
                       <div
                         key={index}
-                        className="flex items-center space-x-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700  dark:hover:bg-slate-800 cursor-pointer transition-colors bg-gray-800 shadow-md  gap-4  hover:bg-gray-700"
+                        className="flex items-center space-x-3 p-3 rounded-lg border border-gray-600 dark:border-slate-700  dark:hover:bg-slate-800 cursor-pointer transition-colors bg-gray-800 shadow-md  gap-4  hover:bg-gray-700"
                         onClick={() =>
                           item.type === "dir"
                             ? handleFolderClick(item.path)

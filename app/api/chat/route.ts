@@ -1,40 +1,47 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*", // Change * to your frontend domain in production
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
 export async function POST(req: NextRequest) {
-    try {
-        // Ensure the request body is parsed correctly
-        const data = await req.json();
-        
-        // Validate input
-        if (!data.body || !data.fileContent) {
-            return NextResponse.json({ 
-                error: 'No input or file content provided' 
-            }, { status: 400 });
-        }
+  try {
+    const data = await req.json();
 
-        // Initialize Gemini
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY || '');
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        // Combine user input with file content for context
-        const prompt = `User input: ${data.body}\nFile content context: ${data.fileContent}`;
-
-        // Generate content
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const output = await response.text();
-
-        // Return response
-        return NextResponse.json({ output: output });
+    if (!data.body || !data.fileContent) {
+      return NextResponse.json(
+        { error: "No input or file content provided" },
+        { status: 400, headers: corsHeaders }
+      );
     }
-    catch(err) {
-        console.error('Error in chat API:', err);
-        
-        // More detailed error handling
-        return NextResponse.json({ 
-            error: 'An error occurred while processing your request',
-            details: err instanceof Error ? err.message : 'Unknown error'
-        }, { status: 500 });
-    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY || "");
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `User input: ${data.body}\nFile content context: ${data.fileContent}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const output = await response.text();
+
+    return NextResponse.json({ output: output }, { headers: corsHeaders });
+  } catch (err) {
+    return NextResponse.json(
+      {
+        error: "An error occurred while processing your request",
+        details: err instanceof Error ? err.message : "Unknown error",
+      },
+      { status: 500, headers: corsHeaders }
+    );
+  }
 }
